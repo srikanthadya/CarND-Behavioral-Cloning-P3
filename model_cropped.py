@@ -36,18 +36,19 @@ from sklearn.utils import shuffle
 IMAGE_HEIGHT= 160
 IMAGE_WIDTH = 320
 IMAGE_CHANNEL = 3
-BATCH_SIZE = 32
+BATCH_SIZE = 64
 EPOCHS = 5
 # fuction to read image from file
 MODEL_FILE_NAME = './model_crop.h5'
 ifile_1 = open('training_images/set_1/driving_log.csv')
 ifile_2 = open('training_images/set_2/driving_log.csv')
-ifile_3 = open('training_images/set_3/driving_log.csv')
+#ifile_3 = open('training_images/set_3/driving_log.csv')
+ifile_4 = open('training_images/set_4/driving_log.csv')
 df_front = []
-[df_front.append(line) for line in  csv.reader(ifile_1)]
-[df_front.append(line) for line in  csv.reader(ifile_2)]
+#[df_front.append(line) for line in  csv.reader(ifile_1)]
+#[df_front.append(line) for line in  csv.reader(ifile_2)]
 #[df_front.append(line) for line in  csv.reader(ifile_3)]
-
+[df_front.append(line) for line in  csv.reader(ifile_4)]
 df = df_front
 # Split data into random training and validation sets
 d_train, d_valid = model_selection.train_test_split(df, test_size=.2,shuffle=True)
@@ -60,7 +61,8 @@ def random_brightness(image):
         return image
 def get_image(sample,j):
         images, angles = [],[]
-        path = os.path.join('training_images',*sample[j].split('\\')[-3:])
+        #print(sample[j].replace("/","\\"))
+        path = os.path.join('training_images/set_4',sample[j].replace("/","\\"))
         angle = np.float32(sample[3])
         if j == 1:
             angle+=0.2
@@ -97,9 +99,7 @@ def generator(data):
 
             for s in current_batch:
 
-                for camera in range(3):
-                    #print(i,j)
-                    images, angles = get_image(s ,camera)
+                    images, angles = get_image(s ,np.random.randint(0,3))
 
                     # Appending them to existing batch
                     X.extend(images)
@@ -138,20 +138,20 @@ def get_model(time_len=1):
     # Add three fully connected layers (depth 100, 50, 10), tanh activation (and dropouts)
     model.add(Dense(100, W_regularizer=l2(0.001)))
     model.add(ELU())
-    #model.add(Dropout(0.50))
+    model.add(Dropout(0.50))
     model.add(Dense(50, W_regularizer=l2(0.001)))
     model.add(ELU())
-    #model.add(Dropout(0.50))
+    model.add(Dropout(0.50))
     model.add(Dense(10, W_regularizer=l2(0.001)))
     model.add(ELU())
-    #model.add(Dropout(0.50))
+    model.add(Dropout(0.50))
 
     # Add a fully connected output layer
     model.add(Dense(1))
 
     # Compile and train the model,
     #model.compile('adam', 'mean_squared_error')
-    model.compile(optimizer=Adam(lr=1e-4), loss='mse',metrics=['accuracy'])
+    model.compile(optimizer=Adam(lr=1e-4), loss='mse',metrics=["mean_squared_error"])
 
     return model
 
@@ -164,19 +164,19 @@ if __name__ == "__main__":
       print('Training started....')
 
       history = model.fit_generator(train_gen,
-                                    steps_per_epoch=len(d_train)//BATCH_SIZE,
+                                    steps_per_epoch=len(d_train),
                                     epochs=EPOCHS,
                                     validation_data=validation_gen,
-                                    validation_steps=len(d_valid)//BATCH_SIZE,
+                                    validation_steps=len(d_valid),
                                     verbose=1,
                                     callbacks=callbacks_list)
-      plt.plot(history.history['acc'])
-      plt.plot(history.history['val_acc'])
-      plt.title('Model accuracy')
-      plt.ylabel('Accuracy')
+      plt.plot(history.history["mean_squared_error"])
+      plt.plot(history.history["val_mean_squared_error"])
+      plt.title('Error convergence')
+      plt.ylabel("mean_squared_error")
       plt.xlabel('Epoch')
       plt.legend(['Train', 'Test'], loc='upper left')
-      plt.savefig('accuracy.png')
+      plt.savefig('mse.png')
 
       #  Plot training & validation loss values
       plt.plot(history.history['loss'])
