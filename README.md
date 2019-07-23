@@ -3,7 +3,7 @@
 
 The aim of this project is to train a neural network so that, given an image taken from a dash cam , 
 the model is able to predict the steering angle required to maintain the car at the center of the lane. 
-In an earlier project, we had taken a Computer Vision (CV) approach to achieve something similar where in, 
+In an [earlier project](https://github.com/srikanthadya/CarND-Behavioral-Cloning-P3), we had taken a Computer Vision (CV) approach to achieve something similar where in,
 the lane lines were detected using CV techniqus like edge detection, perspective transforms and polynomial curve fitting. 
 There were limitations to this approach. Mainly, the only feature used in this approach was human-selected (ie, lane marking). 
 With such high dependency on one feature, the system could be unstable under conditions like, missing lane markings, unpaved roads or other
