@@ -129,9 +129,5 @@ The Donkey Car project is an open source DIY project which also uses the Behavio
 
 4.[writeup.md](https://github.com/srikanthadya/CarND-Behavioral-Cloning-P3/blob/master/writeup.md)
 
+5.[video](https://github.com/srikanthadya/CarND-Behavioral-Cloning-P3/blob/master/Autonomous_Mode.mp4)
 
-
-
-```python
-
-```
