@@ -40,6 +40,8 @@ BATCH_SIZE = 64
 EPOCHS = 5
 # fuction to read image from file
 MODEL_FILE_NAME = './model_fwd_bkwd.h5'
+
+# Images of forward and reverse driving
 ifile_1 = open('training_images/set_1/driving_log.csv')
 ifile_2 = open('training_images/set_2/driving_log.csv')
 #ifile_3 = open('training_images/set_3/driving_log.csv')
@@ -50,15 +52,20 @@ df_front = []
 #[df_front.append(line) for line in  csv.reader(ifile_3)]
 #[df_front.append(line) for line in  csv.reader(ifile_4)]
 df = df_front
-# Split data into random training and validation sets
+
+# Split data into random training and validation sets with a 80/20 split
 d_train, d_valid = model_selection.train_test_split(df, test_size=.2,shuffle=True)
-#print(len(df),len(d_train),len(d_valid))
+
+
+# Brightness perturbation
 def random_brightness(image):
         image = cv2.cvtColor(image,cv2.COLOR_RGB2HSV)
         image[:,:,2] = image[:,:,2]*(0.5+np.random.uniform())
         image = np.array(image).astype('uint8')
         image = cv2.cvtColor(image,cv2.COLOR_HSV2RGB)
         return image
+
+# Read each image and augment the data
 def get_image(sample,j):
         images, angles = [],[]
         path = os.path.join('training_images',*sample[j].split('/')[-3:])
@@ -69,19 +76,25 @@ def get_image(sample,j):
             angle-=0.3
         try:
            image = cv2.imread(path)
+
+           # Change from BGR to RGB color map
            image = cv2.cvtColor(image,cv2.COLOR_BGR2RGB)
            images.append(image)
            angles.append(angle)
+
+           # Brightness augmentation
            images.append(random_brightness(image))
            angles.append(angle)
+
+           # Flipped images augmented to dataset
            images.append(cv2.flip(image,1))
            angles.append(angle*-1.0)
+
            return images,angles
         except:
            print('imissing image ',path)
-    #plt.imshow(image)
-    #plt.show()
 
+# Data generator function
 def generator(data):
     while True:
 
@@ -103,10 +116,12 @@ def generator(data):
 
             yield np.array(X), np.array(y)
 
+# instantiate training and validation generator objects
 train_gen = generator(d_train)
 validation_gen = generator(d_valid)
 
-def get_model(time_len=1):
+# NVIDIA CNN network
+def get_model():
 
     model = Sequential()
     model.add(Lambda(lambda x: (x/255.)-0.5,input_shape=(160,320,3)))
@@ -156,8 +171,7 @@ if __name__ == "__main__":
       model = get_model()
 
       checkpoint = ModelCheckpoint(MODEL_FILE_NAME, monitor='val_loss', verbose=1,save_best_only=True, mode='min',save_weights_only=False)
-       #,callback_each_epoch]
-      #earlystopping=EarlyStopping(monitor="mean_squared_error", patience=20, verbose=1, mode='auto')
+
       callbacks_list = [checkpoint]
       print('Training started....')
 
